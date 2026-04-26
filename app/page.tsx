@@ -3,7 +3,7 @@
 import { useState, useCallback, useId } from 'react';
 import type { FileEntry, ConversionOptions } from '@/lib/types';
 import { DEFAULT_OPTIONS } from '@/lib/types';
-import { isAnimatedGif, getSupportedFormat } from '@/lib/format-detection';
+import { isAnimatedGif } from '@/lib/format-detection';
 import { useVips } from '@/lib/use-vips';
 import { useBeforeUnload } from '@/lib/use-before-unload';
 import { LoadingScreen } from '@/components/LoadingScreen';
