@@ -1,65 +1,137 @@
-import Image from "next/image";
+// app/page.tsx
+'use client';
+import { useState, useCallback, useId } from 'react';
+import type { FileEntry, ConversionOptions } from '@/lib/types';
+import { DEFAULT_OPTIONS } from '@/lib/types';
+import { isAnimatedGif, getSupportedFormat } from '@/lib/format-detection';
+import { useVips } from '@/lib/use-vips';
+import { useBeforeUnload } from '@/lib/use-before-unload';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { UnsupportedBrowser } from '@/components/UnsupportedBrowser';
+import { DropZone } from '@/components/DropZone';
+import { FileQueue } from '@/components/FileQueue';
+import { ConversionControls } from '@/components/ConversionControls';
+import { DownloadAllButton } from '@/components/DownloadAllButton';
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+// Detect WebAssembly support synchronously before rendering
+const wasmSupported = typeof WebAssembly !== 'undefined';
+
+export default function Page() {
+  const { ready, error: vipsError, convert } = useVips();
+  const [files, setFiles] = useState<FileEntry[]>([]);
+  const [globalOptions, setGlobalOptions] = useState<ConversionOptions>(DEFAULT_OPTIONS);
+  const [converting, setConverting] = useState(false);
+  const idPrefix = useId();
+
+  const hasPending = files.some((f) => f.status === 'idle' || f.status === 'converting');
+  const hasDone = files.some((f) => f.status === 'done');
+  useBeforeUnload(hasPending || hasDone);
+
+  const addFiles = useCallback(async (incoming: File[]) => {
+    const newEntries: FileEntry[] = await Promise.all(
+      incoming.map(async (file, i) => {
+        const buffer = await file.arrayBuffer();
+        const animated = await isAnimatedGif(file.type, buffer);
+        return {
+          id: `${idPrefix}-${Date.now()}-${i}`,
+          file,
+          status: 'idle' as const,
+          options: { ...globalOptions },
+          isAnimatedGif: animated,
+          progress: 0,
+        };
+      })
+    );
+    setFiles((prev) => [...prev, ...newEntries]);
+  }, [globalOptions, idPrefix]);
+
+  const removeFile = useCallback((id: string) => {
+    setFiles((prev) => prev.filter((f) => f.id !== id));
+  }, []);
+
+  const updateOptions = useCallback((id: string, options: ConversionOptions) => {
+    setFiles((prev) => prev.map((f) => f.id === id ? { ...f, options } : f));
+  }, []);
+
+  const runConversion = useCallback(async (ids: string[]) => {
+    setConverting(true);
+    await Promise.all(
+      ids.map(async (id) => {
+        setFiles((prev) => prev.map((f) => f.id === id ? { ...f, status: 'converting', progress: 0 } : f));
+        try {
+          const entry = files.find((f) => f.id === id);
+          if (!entry) return;
+          const buffer = await convert(
+            id,
+            entry.file,
+            entry.options,
+            (value) => setFiles((prev) => prev.map((f) => f.id === id ? { ...f, progress: value } : f))
+          );
+          const blob = new Blob([buffer], { type: 'image/webp' });
+          setFiles((prev) => prev.map((f) => f.id === id ? { ...f, status: 'done', result: blob, progress: 100 } : f));
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Conversion failed';
+          setFiles((prev) => prev.map((f) => f.id === id ? { ...f, status: 'error', error: message } : f));
+        }
+      })
+    );
+    setConverting(false);
+  }, [files, convert]);
+
+  const handleConvertAll = useCallback(() => {
+    const idleIds = files.filter((f) => f.status === 'idle').map((f) => f.id);
+    runConversion(idleIds);
+  }, [files, runConversion]);
+
+  const handleReconvert = useCallback((id: string) => {
+    setFiles((prev) => prev.map((f) => f.id === id ? { ...f, status: 'idle', result: undefined, error: undefined, progress: 0 } : f));
+    runConversion([id]);
+  }, [runConversion]);
+
+  if (!wasmSupported) return <UnsupportedBrowser />;
+  if (vipsError) return (
+    <div className="fixed inset-0 flex items-center justify-center p-8 text-center">
+      <p className="text-red-600">Could not load converter. Please refresh and try again.</p>
     </div>
+  );
+  if (!ready) return <LoadingScreen />;
+
+  const idleCount = files.filter((f) => f.status === 'idle').length;
+
+  return (
+    <main className="min-h-screen bg-gray-50 py-10 px-4">
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900">Image → WebP</h1>
+          <p className="text-gray-500 mt-1">Convert images to WebP. Free, private, no uploads.</p>
+        </div>
+
+        <DropZone onFiles={addFiles} disabled={converting} />
+
+        {files.length > 0 && (
+          <ConversionControls options={globalOptions} onChange={setGlobalOptions} />
+        )}
+
+        {idleCount > 0 && (
+          <button
+            type="button"
+            onClick={handleConvertAll}
+            disabled={converting}
+            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl transition-colors"
+          >
+            {converting ? 'Converting...' : `Convert${idleCount > 1 ? ` All (${idleCount})` : ''}`}
+          </button>
+        )}
+
+        <FileQueue
+          files={files}
+          onRemove={removeFile}
+          onOptionsChange={updateOptions}
+          onReconvert={handleReconvert}
+        />
+
+        <DownloadAllButton files={files} />
+      </div>
+    </main>
   );
 }
