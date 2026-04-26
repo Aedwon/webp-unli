@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WebP Unli — Image to WebP Converter
+
+Convert any image to WebP format. Free, unlimited, and entirely private — no uploads, no servers, no accounts.
+
+## Features
+
+- **Broad format support** — JPG, PNG, GIF, AVIF, TIFF, BMP, SVG, HEIC
+- **Conversion controls** — quality slider (0–100), lossless mode, metadata stripping (EXIF, GPS, etc.)
+- **Resize** — width/height inputs with aspect ratio lock
+- **Per-file overrides** — each file can have its own settings independent of the global panel
+- **Batch download** — download all converted files as a ZIP
+- **Animated GIF warning** — flags animated GIFs (only the first frame is converted)
+- **Private by design** — all processing runs in a Web Worker using WebAssembly; files never leave your device
+
+## Tech Stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router, static export) |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| Conversion engine | [wasm-vips](https://github.com/kleisauke/wasm-vips) (libvips compiled to WebAssembly) |
+| ZIP bundling | [fflate](https://github.com/101arrowz/fflate) |
+| Unit tests | Vitest |
+| E2E tests | Playwright |
+| Deployment | Vercel (static hosting) |
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+node node_modules/next/dist/bin/next dev --webpack
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> **Note:** The `--webpack` flag is required because wasm-vips is not yet compatible with Turbopack.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+On first load, the ~10MB WebAssembly binary downloads and caches in the browser. Subsequent visits are instant.
 
-## Learn More
+## Running Tests
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Unit tests
+npm test
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# E2E tests (requires dev server running)
+npm run test:e2e
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Building for Production
 
-## Deploy on Vercel
+```bash
+npm run build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Outputs a fully static site to `out/`. Deploy by pointing any static host at that directory. On Vercel, `output: 'export'` is detected automatically.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project Structure
+
+```
+app/
+  page.tsx          — main page: state, conversion flow, component composition
+  layout.tsx        — root layout, fonts, metadata
+
+components/
+  DropZone          — drag-and-drop (desktop) + tap-to-browse (mobile)
+  FileQueue         — grid of FileCard components
+  FileCard          — per-file card: thumbnail, progress, settings, download
+  ConversionControls — quality, lossless, resize, metadata settings
+  DownloadAllButton — ZIP all completed files
+  ProgressBar       — animated conversion progress indicator
+  LoadingScreen     — shown while wasm-vips initializes
+  UnsupportedBrowser — shown on browsers without WebAssembly
+
+lib/
+  worker.ts         — Web Worker: wasm-vips decode → encode → post result
+  use-vips.ts       — React hook wrapping the worker
+  use-before-unload.ts — warns before leaving with unconverted files
+  format-detection.ts  — MIME/extension validation, animated GIF detection
+  zip.ts            — fflate wrapper for batch ZIP download
+  types.ts          — shared TypeScript types
+```
