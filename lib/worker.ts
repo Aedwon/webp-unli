@@ -1,14 +1,21 @@
 // lib/worker.ts
+
 import type { WorkerRequest, WorkerResponse } from './types';
 
 let vipsReady = false;
-let Vips: Awaited<ReturnType<typeof import('wasm-vips').default>> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Vips: any = null;
 
 async function initVips() {
-  const vipsModule = await import('wasm-vips');
-  Vips = await vipsModule.default({
-    locateFile: (file: string) => `/wasm/${file}`,
-  });
+  // Import vips-es6.js at runtime from /wasm/ instead of bundling it through webpack.
+  // webpackIgnore stops webpack from including wasm-vips in the worker bundle, which
+  // caused circular em-pthread dependencies and a hanging build.
+  // vips-es6.js resolves its own WASM files relative to its URL (/wasm/), so no
+  // locateFile override is needed.
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const { default: initVipsLib } = await import(/* webpackIgnore: true */ '/wasm/vips-es6.js');
+  Vips = await initVipsLib();
   vipsReady = true;
   const msg: WorkerResponse = { type: 'ready' };
   self.postMessage(msg);
@@ -68,7 +75,8 @@ self.addEventListener('message', async (event: MessageEvent<WorkerRequest>) => {
       postProgress(100);
 
       const msg: WorkerResponse = { type: 'done', id, buffer: outputBuffer.buffer };
-      self.postMessage(msg, [outputBuffer.buffer]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (self as any).postMessage(msg, [outputBuffer.buffer]);
     } finally {
       if (processed !== image) processed.delete();
       image.delete();

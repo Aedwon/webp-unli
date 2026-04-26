@@ -12,5 +12,5 @@ export async function buildZip(files: ZipEntry[]): Promise<Blob> {
     entries[name] = new Uint8Array(buffer);
   }
   const zipped = zipSync(entries);
-  return new Blob([zipped], { type: 'application/zip' });
+  return new Blob([new Uint8Array(zipped)], { type: 'application/zip' });
 }
