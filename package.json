@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "postinstall": "mkdir -p public/wasm && cp node_modules/wasm-vips/lib/vips*.* public/wasm/ 2>/dev/null || true",
+    "lint": "next lint",
+    "postinstall": "mkdir -p public/wasm && cp node_modules/wasm-vips/lib/vips.wasm node_modules/wasm-vips/lib/vips-heif.wasm node_modules/wasm-vips/lib/vips-jxl.wasm node_modules/wasm-vips/lib/vips-resvg.wasm node_modules/wasm-vips/lib/vips.js node_modules/wasm-vips/lib/vips-es6.js public/wasm/ 2>/dev/null || true",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test"
