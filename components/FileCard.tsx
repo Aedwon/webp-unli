@@ -47,7 +47,7 @@ export function FileCard({ entry, onRemove, onOptionsChange, onReconvert }: File
         <div className="w-14 h-14 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden flex items-center justify-center">
           {previewUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={previewUrl} alt="" className="w-full h-full object-cover" />
+            <img src={previewUrl} alt={`Preview of ${entry.file.name}`} className="w-full h-full object-cover" />
           ) : (
             <span className="text-xs text-gray-400 uppercase">
               {entry.file.name.split('.').pop()}
@@ -84,6 +84,7 @@ export function FileCard({ entry, onRemove, onOptionsChange, onReconvert }: File
             type="button"
             onClick={() => setShowSettings((s) => !s)}
             title="Per-file settings"
+            aria-label="Toggle file settings"
             className="p-1.5 text-gray-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,6 +97,7 @@ export function FileCard({ entry, onRemove, onOptionsChange, onReconvert }: File
             type="button"
             onClick={() => onRemove(entry.id)}
             title="Remove file"
+            aria-label="Remove file"
             className="p-1.5 text-gray-400 hover:text-red-500 rounded-md hover:bg-red-50 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
