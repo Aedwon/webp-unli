@@ -74,10 +74,13 @@ components/
   UnsupportedBrowser — shown on browsers without WebAssembly
 
 lib/
-  worker.ts         — Web Worker: wasm-vips decode → encode → post result
   use-vips.ts       — React hook wrapping the worker
   use-before-unload.ts — warns before leaving with unconverted files
   format-detection.ts  — MIME/extension validation, animated GIF detection
   zip.ts            — fflate wrapper for batch ZIP download
   types.ts          — shared TypeScript types
+
+public/
+  worker.js         — Web Worker: wasm-vips decode → encode → post result
+  wasm/             — wasm-vips runtime (vips-es6.js + .wasm files)
 ```
