@@ -10,9 +10,10 @@ interface FileCardProps {
   onRemove: (id: string) => void;
   onOptionsChange: (id: string, options: ConversionOptions) => void;
   onReconvert: (id: string) => void;
+  disabled?: boolean;
 }
 
-export function FileCard({ entry, onRemove, onOptionsChange, onReconvert }: FileCardProps) {
+export function FileCard({ entry, onRemove, onOptionsChange, onReconvert, disabled }: FileCardProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -123,7 +124,8 @@ export function FileCard({ entry, onRemove, onOptionsChange, onReconvert }: File
             <button
               type="button"
               onClick={() => onReconvert(entry.id)}
-              className="mt-2 w-full text-sm text-blue-600 hover:underline"
+              disabled={disabled}
+              className="mt-2 w-full text-sm text-blue-600 hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Re-convert with these settings
             </button>
@@ -147,7 +149,8 @@ export function FileCard({ entry, onRemove, onOptionsChange, onReconvert }: File
         <button
           type="button"
           onClick={() => onReconvert(entry.id)}
-          className="w-full py-1.5 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium rounded-lg transition-colors border border-red-200"
+          disabled={disabled}
+          className="w-full py-1.5 px-3 bg-red-50 hover:bg-red-100 disabled:opacity-60 text-red-600 text-sm font-medium rounded-lg transition-colors border border-red-200"
         >
           Retry
         </button>

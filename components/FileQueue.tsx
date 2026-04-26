@@ -7,9 +7,10 @@ interface FileQueueProps {
   onRemove: (id: string) => void;
   onOptionsChange: (id: string, options: ConversionOptions) => void;
   onReconvert: (id: string) => void;
+  disabled?: boolean;
 }
 
-export function FileQueue({ files, onRemove, onOptionsChange, onReconvert }: FileQueueProps) {
+export function FileQueue({ files, onRemove, onOptionsChange, onReconvert, disabled }: FileQueueProps) {
   if (files.length === 0) return null;
 
   return (
@@ -21,6 +22,7 @@ export function FileQueue({ files, onRemove, onOptionsChange, onReconvert }: Fil
           onRemove={onRemove}
           onOptionsChange={onOptionsChange}
           onReconvert={onReconvert}
+          disabled={disabled}
         />
       ))}
     </div>

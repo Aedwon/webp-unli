@@ -1,6 +1,6 @@
 // app/page.tsx
 'use client';
-import { useState, useCallback, useId } from 'react';
+import { useState, useCallback, useId, useRef, useEffect } from 'react';
 import type { FileEntry, ConversionOptions } from '@/lib/types';
 import { DEFAULT_OPTIONS } from '@/lib/types';
 import { isAnimatedGif } from '@/lib/format-detection';
@@ -22,6 +22,10 @@ export default function Page() {
   const [globalOptions, setGlobalOptions] = useState<ConversionOptions>(DEFAULT_OPTIONS);
   const [converting, setConverting] = useState(false);
   const idPrefix = useId();
+  const filesRef = useRef<FileEntry[]>([]);
+  const convertingCountRef = useRef(0);
+
+  useEffect(() => { filesRef.current = files; }, [files]);
 
   const hasPending = files.some((f) => f.status === 'idle' || f.status === 'converting');
   const hasDone = files.some((f) => f.status === 'done');
@@ -36,7 +40,7 @@ export default function Page() {
           id: `${idPrefix}-${Date.now()}-${i}`,
           file,
           status: 'idle' as const,
-          options: { ...globalOptions },
+          options: { ...globalOptions, resize: { ...globalOptions.resize } },
           isAnimatedGif: animated,
           progress: 0,
         };
@@ -54,12 +58,13 @@ export default function Page() {
   }, []);
 
   const runConversion = useCallback(async (ids: string[]) => {
+    convertingCountRef.current++;
     setConverting(true);
     await Promise.all(
       ids.map(async (id) => {
         setFiles((prev) => prev.map((f) => f.id === id ? { ...f, status: 'converting', progress: 0 } : f));
         try {
-          const entry = files.find((f) => f.id === id);
+          const entry = filesRef.current.find((f) => f.id === id);
           if (!entry) return;
           const buffer = await convert(
             id,
@@ -75,8 +80,8 @@ export default function Page() {
         }
       })
     );
-    setConverting(false);
-  }, [files, convert]);
+    if (--convertingCountRef.current === 0) setConverting(false);
+  }, [convert]);
 
   const handleConvertAll = useCallback(() => {
     const idleIds = files.filter((f) => f.status === 'idle').map((f) => f.id);
@@ -128,6 +133,7 @@ export default function Page() {
           onRemove={removeFile}
           onOptionsChange={updateOptions}
           onReconvert={handleReconvert}
+          disabled={converting}
         />
 
         <DownloadAllButton files={files} />
