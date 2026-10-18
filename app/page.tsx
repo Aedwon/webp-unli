@@ -8,6 +8,7 @@ import { isAnimatedGif } from '@/lib/format-detection';
 import { formatBytes } from '@/lib/format';
 import { useVips } from '@/lib/use-vips';
 import { useBeforeUnload } from '@/lib/use-before-unload';
+import { AboutWebp } from '@/components/AboutWebp';
 import { Brand } from '@/components/Brand';
 import { CountUp } from '@/components/CountUp';
 import { DownloadAllButton } from '@/components/DownloadAllButton';
@@ -214,8 +215,9 @@ export default function Page() {
         </header>
 
         {files.length === 0 ? (
-          <div className="anim-stage mx-auto w-full max-w-3xl pt-[6vh]">
+          <div className="anim-stage mx-auto flex w-full max-w-3xl flex-col gap-6 pt-[6vh]">
             <DropZone onFiles={addFiles} disabled={converting} />
+            <AboutWebp layout="row" />
           </div>
         ) : (
           <div className="flex flex-wrap items-start gap-4">
@@ -237,7 +239,7 @@ export default function Page() {
                 onFiles={addFiles}
               />
             </div>
-            <div className="w-full flex-[1_1_320px] lg:max-w-[340px] lg:sticky lg:top-6">
+            <div className="flex w-full flex-[1_1_320px] flex-col gap-4 lg:max-w-[340px]">
               <SettingsPanel
                 options={settingsOptions}
                 onChange={(o) => (activeScope === 'file' && selected ? updateOptions(selected.id, o) : updateGlobalOptions(o))}
@@ -248,6 +250,7 @@ export default function Page() {
                 converting={converting}
                 onConvert={handleConvertAll}
               />
+              <AboutWebp />
             </div>
           </div>
         )}
