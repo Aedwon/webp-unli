@@ -22,6 +22,7 @@ export interface FileEntry {
   status: FileStatus;
   options: ConversionOptions;
   result?: Blob;
+  convertedWith?: ConversionOptions; // options the current result was made with
   error?: string;
   isAnimatedGif?: boolean;
   progress: number;      // 0–100

@@ -1,13 +1,16 @@
-# WebP Unli — Image to WebP Converter
+# Unlimited WebP Converter by Aedwon
 
-Convert any image to WebP format. Free, unlimited, and entirely private — no uploads, no servers, no accounts.
+Convert any image to WebP format. Free, unlimited, and entirely private. No uploads, no servers, no accounts.
 
 ## Features
 
 - **Broad format support** — JPG, PNG, GIF, AVIF, TIFF, BMP, SVG, HEIC
 - **Conversion controls** — quality slider (0–100), lossless mode, metadata stripping (EXIF, GPS, etc.)
 - **Resize** — width/height inputs with aspect ratio lock
-- **Per-file overrides** — each file can have its own settings independent of the global panel
+- **Per-file overrides** — switch the settings panel to "This file" to override one file
+- **See the compression** — drag a before/after slider over the original and the WebP, with an animated size bar and a running total of bytes saved
+- **Drop or paste anywhere** — drag files onto the page or paste from the clipboard
+- **Light and dark** — Graphite theme that follows your system or your choice
 - **Batch download** — download all converted files as a ZIP
 - **Animated GIF warning** — flags animated GIFs (only the first frame is converted)
 - **Private by design** — all processing runs in a Web Worker using WebAssembly; files never leave your device
@@ -18,7 +21,8 @@ Convert any image to WebP format. Free, unlimited, and entirely private — no u
 |---|---|
 | Framework | Next.js 16 (App Router, static export) |
 | Language | TypeScript |
-| Styling | Tailwind CSS |
+| Styling | Tailwind CSS 4 |
+| Icons | [Phosphor](https://phosphoricons.com) |
 | Conversion engine | [wasm-vips](https://github.com/kleisauke/wasm-vips) (libvips compiled to WebAssembly) |
 | ZIP bundling | [fflate](https://github.com/101arrowz/fflate) |
 | Unit tests | Vitest |
