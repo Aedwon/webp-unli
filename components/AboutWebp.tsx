@@ -44,15 +44,20 @@ export function AboutWebp({ layout = 'stack' }: AboutWebpProps) {
           </div>
         ))}
       </div>
-      <a
-        href="https://developers.google.com/speed/webp"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-4 inline-flex items-center gap-1 text-[13px] leading-[18px] font-medium text-ink underline underline-offset-4"
-      >
-        Read the WebP docs
-        <ArrowSquareOutIcon size={14} aria-hidden="true" />
-      </a>
+      <div className="mt-5 flex flex-col items-center gap-2 border-t border-line pt-5 text-center">
+        <p className="max-w-md text-[15px] leading-6 font-semibold tracking-[-0.01em] text-ink">
+          Serving WebP on your website is a recommended way to speed up page loads.
+        </p>
+        <a
+          href="https://developers.google.com/speed/webp"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-xs leading-4 text-ink-2 underline underline-offset-4 hover:text-ink"
+        >
+          Read the WebP docs
+          <ArrowSquareOutIcon size={12} aria-hidden="true" />
+        </a>
+      </div>
     </section>
   );
 }
