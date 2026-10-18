@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { CircleNotchIcon, FileZipIcon } from '@phosphor-icons/react';
 import type { FileEntry } from '@/lib/types';
 import { buildZip } from '@/lib/zip';
 
@@ -37,9 +38,15 @@ export function DownloadAllButton({ files }: DownloadAllButtonProps) {
       type="button"
       onClick={handleDownloadAll}
       disabled={loading}
-      className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl transition-colors"
+      className="anim-stage flex h-10 items-center gap-2 rounded-full bg-accent px-5 whitespace-nowrap text-sm font-semibold text-on-accent hover:brightness-95 disabled:opacity-70"
     >
-      {loading ? 'Preparing ZIP...' : `Download All (${done.length} files)`}
+      {loading ? (
+        <CircleNotchIcon size={18} weight="bold" className="animate-[spin_700ms_linear_infinite]" aria-hidden="true" />
+      ) : (
+        <FileZipIcon size={18} weight="bold" aria-hidden="true" />
+      )}
+      {loading ? 'Preparing' : 'Download all'}
+      <span className="font-medium opacity-70">{done.length}</span>
     </button>
   );
 }
